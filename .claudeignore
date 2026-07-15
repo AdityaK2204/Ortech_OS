@@ -1,0 +1,17 @@
+# Dependencies & build output
+node_modules/
+dist/
+dist-ssr/
+build/
+.next/
+coverage/
+.vite/
+
+# Lockfiles & generated artifacts
+package-lock.json
+*.tsbuildinfo
+
+# Secrets (defense in depth — enforcement is the block-env-reads hook)
+.env
+.env.*
+!.env.example
