@@ -16,7 +16,7 @@ import {
   onAuthChange,
 } from '../lib/api/auth';
 
-export type Role = 'admin' | 'supervisor';
+export type Role = 'admin' | 'supervisor' | 'accountant';
 
 export interface AuthUser {
   id?: string;
@@ -53,7 +53,9 @@ function titleCase(s: string) {
   return s.replace(/[._-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 function roleLabel(role: Role) {
-  return role === 'admin' ? 'Director / Admin' : 'Site Supervisor';
+  if (role === 'admin') return 'Director / Admin';
+  if (role === 'accountant') return 'Accountant';
+  return 'Site Supervisor';
 }
 
 // --- Supabase-backed auth ---------------------------------------------------
@@ -163,8 +165,8 @@ function LocalAuthProvider({ children }: { children: ReactNode }) {
             : {
                 email,
                 role,
-                name: titleCase(email.split('@')[0] || 'admin'),
-                roleLabel: roleLabel('admin'),
+                name: titleCase(email.split('@')[0] || (role === 'accountant' ? 'accountant' : 'admin')),
+                roleLabel: roleLabel(role),
               };
         sessionStorage.setItem(LOCAL_KEY, JSON.stringify(next));
         setUser(next);
@@ -192,5 +194,7 @@ export function useAuth(): AuthState {
 
 /** Landing route for a role. */
 export function homePathFor(role: Role | undefined): string {
-  return role === 'supervisor' ? '/my-sites' : '/dashboard';
+  if (role === 'supervisor') return '/my-sites';
+  if (role === 'accountant') return '/accounts';
+  return '/dashboard';
 }

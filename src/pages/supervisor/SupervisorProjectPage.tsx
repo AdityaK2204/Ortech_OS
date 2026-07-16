@@ -15,10 +15,12 @@ import TeamTab from '../tabs/TeamTab';
 import MachinesTab from '../tabs/MachinesTab';
 import FinanceTab from '../tabs/FinanceTab';
 import ScheduleTab from '../tabs/ScheduleTab';
+import ExpensesTab from '../tabs/ExpensesTab';
 
 const TABS = [
   { id: 'progress', label: 'Progress' },
   { id: 'updates', label: 'My Updates' },
+  { id: 'expenses', label: 'Expenses' },
   { id: 'team', label: 'Team' },
   { id: 'machines', label: 'Machines' },
   { id: 'finance', label: 'Finance' },
@@ -125,6 +127,7 @@ export default function SupervisorProjectPage() {
 
       {tab === 'progress' && <ProgressTab project={project} showLocateMe />}
       {tab === 'updates' && <UpdatesList pulses={pulses} />}
+      {tab === 'expenses' && <ExpensesTab project={project} />}
       {tab === 'team' && <TeamTab project={project} />}
       {tab === 'machines' && <MachinesTab project={project} />}
       {tab === 'finance' && <FinanceTab project={project} />}

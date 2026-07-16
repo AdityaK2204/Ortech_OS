@@ -48,6 +48,26 @@ export default function Layout({ children }: { children: ReactNode }) {
                   Sites
                 </NavLink>
                 <NavLink
+                  to="/admin/accounts"
+                  className={({ isActive }) =>
+                    `rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
+                      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-500 hover:text-slate-800'
+                    }`
+                  }
+                >
+                  Accounts
+                </NavLink>
+                <NavLink
+                  to="/accounts"
+                  className={({ isActive }) =>
+                    `rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
+                      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-500 hover:text-slate-800'
+                    }`
+                  }
+                >
+                  Review Queue
+                </NavLink>
+                <NavLink
                   to="/admin/users"
                   className={({ isActive }) =>
                     `rounded-lg px-3 py-1.5 text-sm font-semibold transition ${

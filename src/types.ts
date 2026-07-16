@@ -234,6 +234,89 @@ export interface Measurement {
 /** Shape captured by the DMB form (id/timestamps added by the store). */
 export type MeasurementInput = Omit<Measurement, 'id' | 'createdAt' | 'pulseId'>;
 
+// --- Accounts & Transactions -------------------------------------------------
+// "No money leaves the company without a submitted, approved, photographed
+// transaction record." Claims are append-only; corrections are reversals.
+
+export type TxnCategory =
+  | 'diesel'
+  | 'materials'
+  | 'gst_invoice'
+  | 'cash_expense'
+  | 'wages_advance'
+  | 'toll_parking'
+  | 'equipment_rental'
+  | 'site_consumables'
+  | 'other';
+
+export type TxnStatus =
+  | 'submitted'
+  | 'under_review'
+  | 'queried'
+  | 'approved'
+  | 'rejected'
+  | 'disbursed'
+  | 'reversed';
+
+export type PaymentMethod = 'cash' | 'upi' | 'bank_transfer';
+
+/** An expense claim from the field (append-only; edits are reversals). */
+export interface Txn {
+  id: string;
+  projectId: string;
+  supervisorName: string;
+  category: TxnCategory;
+  amount: number;
+  gstApplicable: boolean;
+  baseAmount?: number;
+  gstAmount?: number;
+  vendorName: string;
+  vendorGstin?: string;
+  description: string;
+  billPhotoNames: string[];
+  /** how the supervisor already paid, informs reimbursement */
+  paymentMethodUsed?: 'cash' | 'upi' | 'paid_by_supervisor';
+  status: TxnStatus;
+  flaggedDuplicate: boolean;
+  flaggedDieselAnomaly: boolean;
+  reversalOf?: string;
+  submittedAt: string; // ISO datetime
+}
+
+export type TxnInput = Omit<
+  Txn,
+  'id' | 'status' | 'flaggedDuplicate' | 'flaggedDieselAnomaly' | 'submittedAt'
+>;
+
+/** One entry in a transaction's append-only audit trail. */
+export interface TxnReview {
+  id: string;
+  transactionId: string;
+  reviewerName: string;
+  action: 'under_review' | 'queried' | 'approved' | 'rejected' | 'clarified' | 'admin_flag';
+  reason?: string;
+  createdAt: string;
+}
+
+/** A payout record — every disbursement has its own paper trail. */
+export interface Disbursement {
+  id: string;
+  transactionId: string;
+  disbursedByName: string;
+  amount: number;
+  method: PaymentMethod;
+  referenceNumber: string;
+  isEmergencyOverride: boolean;
+  disbursedAt: string;
+}
+
+/** Director co-signature for amounts at/above the threshold. */
+export interface CoApproval {
+  transactionId: string;
+  approvedByName: string;
+  createdAt: string;
+}
+
 // --- Project creation (admin) ----------------------------------------------
 
 export type TeamRole = 'Supervisor' | 'Site Engineer' | 'Labour';

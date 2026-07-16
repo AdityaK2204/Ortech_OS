@@ -167,7 +167,13 @@ function DemoAuth() {
 
   const selectRole = (r: Role) => {
     setRole(r);
-    setEmail(r === 'admin' ? 'admin@ortech.os' : 'supervisor@ortech.os');
+    setEmail(
+      r === 'admin'
+        ? 'admin@ortech.os'
+        : r === 'accountant'
+          ? 'accounts@ortech.os'
+          : 'supervisor@ortech.os'
+    );
   };
 
   const submit = (e: React.FormEvent) => {
@@ -179,10 +185,10 @@ function DemoAuth() {
 
   return (
     <form onSubmit={submit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-5 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
-        {(['admin', 'supervisor'] as Role[]).map((r) => (
-          <button key={r} type="button" onClick={() => selectRole(r)} className={`rounded-lg py-2 text-sm font-semibold capitalize transition ${role === r ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-            {r === 'admin' ? 'Admin / Boss' : 'Supervisor'}
+      <div className="mb-5 grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1">
+        {(['admin', 'supervisor', 'accountant'] as Role[]).map((r) => (
+          <button key={r} type="button" onClick={() => selectRole(r)} className={`rounded-lg py-2 text-xs font-semibold capitalize transition ${role === r ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+            {r === 'admin' ? 'Admin / Boss' : r === 'accountant' ? 'Accountant' : 'Supervisor'}
           </button>
         ))}
       </div>

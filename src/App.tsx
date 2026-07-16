@@ -10,13 +10,23 @@ import SupervisorDashboard from './pages/supervisor/SupervisorDashboard';
 import SupervisorProjectPage from './pages/supervisor/SupervisorProjectPage';
 import UpdateProgressPage from './pages/supervisor/UpdateProgressPage';
 import DailyMeasurementsPage from './pages/supervisor/DailyMeasurementsPage';
+import AccountsPage from './pages/accounts/AccountsPage';
+import AdminAccountsPage from './pages/admin/AdminAccountsPage';
 import type { JSX } from 'react';
 
-function RequireRole({ role, children }: { role: Role; children: JSX.Element }) {
+function RequireRole({
+  role,
+  children,
+}: {
+  role: Role | Role[];
+  children: JSX.Element;
+}) {
   const { isAuthed, user, loading } = useAuth();
+  const roles = Array.isArray(role) ? role : [role];
   if (loading) return <Splash />;
   if (!isAuthed) return <Navigate to="/login" replace />;
-  if (user?.role !== role) return <Navigate to={homePathFor(user?.role)} replace />;
+  if (!user?.role || !roles.includes(user.role))
+    return <Navigate to={homePathFor(user?.role)} replace />;
   return children;
 }
 
@@ -82,6 +92,24 @@ export default function App() {
         element={
           <RequireRole role="admin">
             <AdminUsersPage />
+          </RequireRole>
+        }
+      />
+      <Route
+        path="/admin/accounts"
+        element={
+          <RequireRole role="admin">
+            <AdminAccountsPage />
+          </RequireRole>
+        }
+      />
+
+      {/* Accounts — the Accountant's entire world; directors may also work it */}
+      <Route
+        path="/accounts"
+        element={
+          <RequireRole role={['accountant', 'admin']}>
+            <AccountsPage />
           </RequireRole>
         }
       />

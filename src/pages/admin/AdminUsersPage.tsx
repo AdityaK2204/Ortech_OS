@@ -156,6 +156,7 @@ export default function AdminUsersPage() {
                         >
                           <option value="admin">Admin / Director</option>
                           <option value="supervisor">Supervisor</option>
+                          <option value="accountant">Accountant</option>
                         </select>
                       </td>
 
@@ -183,6 +184,8 @@ export default function AdminUsersPage() {
                               {siteCountFor(r.supervisorName)} site{siteCountFor(r.supervisorName) === 1 ? '' : 's'}
                             </span>
                           </div>
+                        ) : r.role === 'accountant' ? (
+                          <span className="text-xs text-slate-400">Accounts section only</span>
                         ) : (
                           <span className="text-xs text-slate-400">Full access (all sites)</span>
                         )}
@@ -327,6 +330,7 @@ function InviteModal({
               <select className="ip" value={role} onChange={(e) => setRole(e.target.value as Role)}>
                 <option value="supervisor">Supervisor</option>
                 <option value="admin">Admin / Director</option>
+                <option value="accountant">Accountant</option>
               </select>
             </Field>
             {role === 'supervisor' && (
