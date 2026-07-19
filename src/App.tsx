@@ -12,6 +12,7 @@ import UpdateProgressPage from './pages/supervisor/UpdateProgressPage';
 import DailyMeasurementsPage from './pages/supervisor/DailyMeasurementsPage';
 import AccountsPage from './pages/accounts/AccountsPage';
 import AdminAccountsPage from './pages/admin/AdminAccountsPage';
+import PwaManager from './components/PwaManager';
 import type { JSX } from 'react';
 
 function RequireRole({
@@ -48,7 +49,9 @@ export default function App() {
   if (loading) return <Splash />;
 
   return (
-    <Routes>
+    <>
+      <PwaManager />
+      <Routes>
       <Route
         path="/login"
         element={isAuthed ? <Navigate to={home} replace /> : <LoginPage />}
@@ -150,5 +153,6 @@ export default function App() {
 
       <Route path="*" element={<Navigate to={isAuthed ? home : '/login'} replace />} />
     </Routes>
+    </>
   );
 }

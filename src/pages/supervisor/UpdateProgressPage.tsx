@@ -451,7 +451,7 @@ export default function UpdateProgressPage() {
         )}
 
         {/* Sticky submit bar */}
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/90 backdrop-blur">
+        <div className="safe-bottom fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/90 backdrop-blur">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
             <Link
               to={`/my-sites/${project.id}`}

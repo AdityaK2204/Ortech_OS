@@ -27,12 +27,47 @@ body {
   color: #1e293b;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  /* draw edge-to-edge under notches; individual bars pad with safe-area vars */
+  overscroll-behavior-y: none; /* no pull-to-refresh mid-form on site */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Installed-PWA / notch safe areas */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Sticky headers/footers respect the notch & home-indicator */
+.safe-top {
+  padding-top: var(--safe-top);
+}
+.safe-bottom {
+  padding-bottom: var(--safe-bottom);
 }
 
 /* Thin, unobtrusive scrollbars for the chainage map / panels */
 * {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
+}
+
+/* Comfortable touch targets on coarse pointers (phones) */
+@media (pointer: coarse) {
+  button,
+  a,
+  select,
+  input[type='checkbox'],
+  input[type='radio'],
+  input[type='file'] {
+    min-height: 44px;
+  }
+  input[type='checkbox'],
+  input[type='radio'] {
+    min-height: 0; /* keep checkboxes natural; their labels carry the target */
+    width: 1.25rem;
+    height: 1.25rem;
+  }
 }
 
 /* Shared form input used across the supervisor update + create-project forms */
@@ -43,13 +78,37 @@ body {
   border: 1px solid #cbd5e1;
   background: #fff;
   padding: 0.625rem 0.75rem;
-  font-size: 0.875rem;
+  /* 16px minimum — below this iOS Safari auto-zooms on focus, which is
+     miserable in sunlight with gloves. Never shrink this. */
+  font-size: 1rem;
   color: #1e293b;
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+@media (min-width: 640px) {
+  .num-input,
+  .ip {
+    font-size: 0.875rem; /* desktop can be denser */
+  }
 }
 .num-input:focus,
 .ip:focus {
   border-color: var(--color-brand-500);
   box-shadow: 0 0 0 2px var(--color-brand-100);
+}
+
+/* Date/select controls: same no-zoom rule */
+input[type='date'],
+select,
+textarea {
+  font-size: 1rem;
+}
+@media (min-width: 640px) {
+  input[type='date'],
+  select,
+  textarea {
+    font-size: 0.875rem;
+  }
 }

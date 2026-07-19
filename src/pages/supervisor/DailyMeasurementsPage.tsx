@@ -498,7 +498,7 @@ export default function DailyMeasurementsPage() {
       </div>
 
       {/* Sticky: Today's Summary + Submit Day */}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 backdrop-blur">
+      <div className="safe-bottom fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
           <div className="mb-2.5 grid grid-cols-4 gap-2 text-center">
             <SummaryStat label="Measurements" value={String(draftSummary.count)} />

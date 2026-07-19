@@ -22,61 +22,45 @@ function BrandMark() {
   );
 }
 
+/** Admin quick-nav — top pills on ≥sm, bottom tab bar on phones. */
+const ADMIN_NAV = [
+  { to: '/dashboard', label: 'Sites', icon: '🗺' },
+  { to: '/admin/accounts', label: 'Accounts', icon: '₹' },
+  { to: '/accounts', label: 'Queue', icon: '☑' },
+  { to: '/admin/users', label: 'Users', icon: '👤' },
+];
+
 export default function Layout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const home = homePathFor(user?.role);
+  const isAdmin = user?.role === 'admin';
 
   return (
     <div className="min-h-full">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/85 backdrop-blur">
+      <header className="safe-top sticky top-0 z-30 border-b border-slate-200 bg-white/85 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-5">
             <Link to={home} className="transition-opacity hover:opacity-80">
               <BrandMark />
             </Link>
-            {user?.role === 'admin' && (
+            {isAdmin && (
               <nav className="hidden items-center gap-1 sm:flex">
-                <NavLink
-                  to="/dashboard"
-                  className={({ isActive }) =>
-                    `rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
-                      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-500 hover:text-slate-800'
-                    }`
-                  }
-                >
-                  Sites
-                </NavLink>
-                <NavLink
-                  to="/admin/accounts"
-                  className={({ isActive }) =>
-                    `rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
-                      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-500 hover:text-slate-800'
-                    }`
-                  }
-                >
-                  Accounts
-                </NavLink>
-                <NavLink
-                  to="/accounts"
-                  className={({ isActive }) =>
-                    `rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
-                      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-500 hover:text-slate-800'
-                    }`
-                  }
-                >
-                  Review Queue
-                </NavLink>
-                <NavLink
-                  to="/admin/users"
-                  className={({ isActive }) =>
-                    `rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
-                      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-500 hover:text-slate-800'
-                    }`
-                  }
-                >
-                  Users
-                </NavLink>
+                {ADMIN_NAV.map((n) => (
+                  <NavLink
+                    key={n.to}
+                    to={n.to}
+                    className={({ isActive }) =>
+                      `rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
+                        isActive
+                          ? 'bg-brand-50 text-brand-700'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`
+                    }
+                  >
+                    {n.label}
+                  </NavLink>
+                ))}
               </nav>
             )}
           </div>
@@ -104,7 +88,36 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+
+      <main
+        className={`mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 ${
+          isAdmin ? 'pb-24 sm:pb-8' : ''
+        }`}
+      >
+        {children}
+      </main>
+
+      {/* Admin bottom tab bar — thumb-reach navigation on phones */}
+      {isAdmin && (
+        <nav className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur sm:hidden">
+          <div className="grid grid-cols-4">
+            {ADMIN_NAV.map((n) => (
+              <NavLink
+                key={n.to}
+                to={n.to}
+                className={({ isActive }) =>
+                  `flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold transition ${
+                    isActive ? 'text-brand-700' : 'text-slate-400'
+                  }`
+                }
+              >
+                <span className="text-lg leading-none">{n.icon}</span>
+                {n.label}
+              </NavLink>
+            ))}
+          </div>
+        </nav>
+      )}
     </div>
   );
 }
