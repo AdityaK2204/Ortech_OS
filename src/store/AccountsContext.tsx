@@ -26,6 +26,7 @@ import {
   updateThreshold as apiUpdateThreshold,
 } from '../lib/api/transactions';
 import { looksDuplicate } from '../lib/accounts';
+import { onAuthChange } from '../lib/api/auth';
 import type {
   CoApproval,
   Disbursement,
@@ -338,8 +339,14 @@ function SupabaseAccountsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     reload();
+    // Refetch on session change — the mount-time fetch runs pre-login and RLS
+    // returns nothing (deferred: see supabase-js auth-callback guidance).
+    const unsubAuth = onAuthChange(() => setTimeout(reload, 0));
     const unsub = subscribeAccounts(reload);
-    return unsub;
+    return () => {
+      unsubAuth();
+      unsub();
+    };
   }, [reload]);
 
   const submitTxn = useCallback(async (input: TxnInput): Promise<Txn> => {

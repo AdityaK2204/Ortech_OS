@@ -19,6 +19,7 @@ import {
   subscribeProjects,
 } from '../lib/api/projects';
 import { fetchPulses, insertPulse, subscribePulses } from '../lib/api/pulses';
+import { onAuthChange } from '../lib/api/auth';
 import { applyPatchToProject } from '../lib/projectPatch';
 import type {
   DailyPulse,
@@ -268,10 +269,16 @@ function SupabaseProjectsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     reload();
+    // Refetch when the session changes: the first fetch happens pre-login and
+    // RLS correctly returns nothing — without this, data only appears after a
+    // manual refresh. (Deferred via setTimeout: supabase-js warns against
+    // calling client methods directly inside the auth callback.)
+    const unsubAuth = onAuthChange(() => setTimeout(reload, 0));
     // Realtime: refetch on any project/pulse change (simple + always correct).
     const unsubA = subscribeProjects(reload);
     const unsubB = subscribePulses(reload);
     return () => {
+      unsubAuth();
       unsubA();
       unsubB();
     };

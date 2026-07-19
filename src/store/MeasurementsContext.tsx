@@ -13,6 +13,7 @@ import {
   insertMeasurements,
   subscribeMeasurements,
 } from '../lib/api/measurements';
+import { onAuthChange } from '../lib/api/auth';
 import { useProjects } from './ProjectsContext';
 import { taskIdForMeasurement } from '../lib/measure';
 import type {
@@ -176,8 +177,14 @@ export function MeasurementsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!backend) return;
     reload();
+    // Refetch on session change — the mount-time fetch runs pre-login and RLS
+    // returns nothing (deferred: see supabase-js auth-callback guidance).
+    const unsubAuth = onAuthChange(() => setTimeout(reload, 0));
     const unsub = subscribeMeasurements(reload);
-    return unsub;
+    return () => {
+      unsubAuth();
+      unsub();
+    };
   }, [backend, reload]);
 
   const forSite = useCallback(
