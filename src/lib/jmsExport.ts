@@ -1,6 +1,6 @@
-import ExcelJS from 'exceljs';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+// exceljs + jspdf are ~1 MB minified — loaded on demand (dynamic import) so
+// field phones never download the billing-export engine with the app shell.
+import type * as ExcelJS from 'exceljs';
 import {
   PAYABLE_ITEMS,
   RESTORATION_ITEMS,
@@ -77,7 +77,9 @@ export async function exportExcel(
   measurements: Measurement[],
   period: ExportPeriod
 ): Promise<void> {
-  const wb = new ExcelJS.Workbook();
+  const mod = await import('exceljs');
+  const Excel = (mod.default ?? mod) as typeof ExcelJS;
+  const wb = new Excel.Workbook();
   wb.creator = 'ORTECH OS';
   const ws = wb.addWorksheet('JMS', {
     pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1 },
@@ -320,11 +322,15 @@ export function exportCsv(
 
 // --- PDF ------------------------------------------------------------------------
 
-export function exportPdf(
+export async function exportPdf(
   project: Project,
   measurements: Measurement[],
   period: ExportPeriod
-): void {
+): Promise<void> {
+  const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ]);
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
 

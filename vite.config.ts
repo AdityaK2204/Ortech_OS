@@ -36,6 +36,16 @@ export default defineConfig({
       workbox: {
         // App shell: precache the built JS/CSS/HTML so the app OPENS offline.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // Keep the offline install light for field phones: the export engines
+        // (exceljs/jspdf, ~1.7 MB) are admin-office features — fetched from the
+        // CDN on demand, never precached to a supervisor's device.
+        globIgnores: [
+          '**/exceljs*',
+          '**/jspdf*',
+          '**/html2canvas*',
+          '**/purify*',
+          '**/index.es-*',
+        ],
         navigateFallback: '/index.html',
         // Never intercept Supabase/Google APIs — data must stay live or fail
         // honestly (the app's own optimistic/local states handle offline).

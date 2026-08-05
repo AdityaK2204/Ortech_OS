@@ -59,7 +59,7 @@ export default function MeasurementsTab({ project }: { project: Project }) {
     try {
       const period = { from, to };
       if (format === 'xlsx') await exportExcel(project, inPeriod, period);
-      else if (format === 'pdf') exportPdf(project, inPeriod, period);
+      else if (format === 'pdf') await exportPdf(project, inPeriod, period);
       else exportCsv(project, inPeriod, period);
     } catch (e) {
       setError((e as Error).message || 'Export failed.');
