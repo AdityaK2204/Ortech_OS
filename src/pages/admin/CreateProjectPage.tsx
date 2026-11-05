@@ -24,6 +24,7 @@ export default function CreateProjectPage() {
       startDate: v.startDate,
       endDate: v.endDate,
       routeCoords: v.routeCoords,
+      routeSource: v.routeSource,
       pointTargets: { chamber: num(v.chamber), splice: num(v.splice), marker: num(v.marker) },
       supervisor: { name: v.supName, phone: v.supPhone },
       siteEngineer: { name: v.engName, phone: v.engPhone },

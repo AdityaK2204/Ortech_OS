@@ -124,7 +124,7 @@ export function createProject(input: NewProjectInput): Project {
     totalLengthMeters: len,
     route: {
       id: `route-${slugify(input.name)}`,
-      source: 'hand_drawn',
+      source: input.routeCoords.length >= 2 ? (input.routeSource ?? 'hand_drawn') : 'hand_drawn',
       geometry: { type: 'LineString', coordinates: defaultRoute(input.routeCoords) },
     },
     startDate: input.startDate,

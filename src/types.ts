@@ -340,6 +340,8 @@ export interface NewProjectInput {
   endDate: string; // YYYY-MM-DD (expected deadline)
   /** GeoJSON [lng,lat] vertices drawn on the map (may be empty) */
   routeCoords: [number, number][];
+  /** where routeCoords came from; defaults to hand-drawn */
+  routeSource?: RouteGeometry['source'];
   /** planned counts for the point tasks */
   pointTargets: { chamber: number; splice: number; marker: number };
   supervisor: { name: string; phone: string };
