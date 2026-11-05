@@ -47,7 +47,7 @@ export default function AdminUsersPage() {
   useEffect(() => {
     if (backend) load();
     else setLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [backend]);
 
   const patch = async (id: string, p: ProfilePatch) => {
@@ -224,8 +224,8 @@ export default function AdminUsersPage() {
       </div>
 
       <p className="mt-3 text-xs text-slate-400">
-        Note: “Disabled” hides a user in the app; fully blocking sign-in also requires banning them
-        in the Supabase dashboard (Authentication → Users).
+        Note: a “Disabled” user is signed out and the database denies them all data. Accounts added
+        from the Supabase dashboard start Disabled — set their role and site, then Enable them.
       </p>
 
       {showInvite && (
@@ -311,7 +311,7 @@ function InviteModal({
             <p>
               It uses the service-role key, which can’t run in the browser. Until it’s deployed, add
               users from the <span className="font-semibold">Supabase dashboard → Authentication → Users → Add user</span>
-              , then set their role here. Deploy steps are in{' '}
+              , then set their role and site here and click Enable (new accounts start disabled). Deploy steps are in{' '}
               <code>supabase/functions/admin-users/README.md</code>.
             </p>
             <button onClick={onClose} className="w-full rounded-lg bg-slate-900 py-2.5 text-sm font-semibold text-white">

@@ -4,6 +4,7 @@ import Layout from '../../components/Layout';
 import { useAuth } from '../../auth/AuthContext';
 import { useProjects } from '../../store/ProjectsContext';
 import { useMeasurements } from '../../store/MeasurementsContext';
+import { uploadPhotos } from '../../lib/api/photos';
 import { formatMeters } from '../../lib/progress';
 import {
   MEASUREMENT_TYPES,
@@ -37,7 +38,7 @@ interface CardDraft {
   strata: Strata;
   measurementType: MeasurementType;
   payableItems: PayableItem[];
-  photoNames: string[];
+  photoFiles: File[];
   remarks: string;
   gps?: { lat: number; lng: number; accuracyM?: number };
   gpsState: 'idle' | 'locating' | 'ok' | 'unavailable';
@@ -60,7 +61,7 @@ function blankCard(prevTo?: string): CardDraft {
     strata: 'non_rocky',
     measurementType: 'normal_trenching',
     payableItems: [],
-    photoNames: [],
+    photoFiles: [],
     remarks: '',
     gpsState: 'idle',
   };
@@ -108,7 +109,7 @@ export default function DailyMeasurementsPage() {
         ),
       { enableHighAccuracy: true, timeout: 8000 }
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const existingToday = useMemo(
@@ -168,7 +169,7 @@ export default function DailyMeasurementsPage() {
     cards.map((c) => ({
       actualLengthM: lengthOf(c),
       payableLengthM: lengthOf(c),
-      photoNames: c.photoNames,
+      photoNames: c.photoFiles.map((f) => f.name),
     }))
   );
   const doneToday =
@@ -204,7 +205,7 @@ export default function DailyMeasurementsPage() {
         measurementType: c.measurementType,
         payableItems: c.payableItems,
         remarks: c.remarks.trim() || undefined,
-        photoNames: c.photoNames,
+        photoNames: [],
         gps: c.gps,
         verificationStatus: 'submitted',
       });
@@ -212,6 +213,10 @@ export default function DailyMeasurementsPage() {
 
     setBusy(true);
     try {
+      // Upload each card's photos only after every card has validated.
+      for (const [i, c] of cards.entries()) {
+        built[i].photoNames = await uploadPhotos(project.id, 'measurements', c.photoFiles, date);
+      }
       await submitDay(built, {
         projectId: project.id,
         date,
@@ -456,16 +461,14 @@ export default function DailyMeasurementsPage() {
                 multiple
                 onChange={(e) =>
                   patch(c.key, {
-                    photoNames: e.target.files
-                      ? Array.from(e.target.files).map((f) => f.name)
-                      : [],
+                    photoFiles: e.target.files ? Array.from(e.target.files) : [],
                   })
                 }
                 className="block w-full text-sm text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2.5 file:text-sm file:font-bold file:text-brand-700 hover:file:bg-brand-100"
               />
-              {c.photoNames.length > 0 && (
+              {c.photoFiles.length > 0 && (
                 <p className="mt-1 text-xs text-slate-500">
-                  {c.photoNames.length} photo(s) — tied to {c.fromM || '?'}–{c.toM || '?'} m on {date}
+                  {c.photoFiles.length} photo(s) — tied to {c.fromM || '?'}–{c.toM || '?'} m on {date}
                 </p>
               )}
 

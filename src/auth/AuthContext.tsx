@@ -11,7 +11,6 @@ import { isSupabaseConfigured } from '../lib/supabase';
 import {
   signInWithPassword,
   signOut as apiSignOut,
-  signUpWithPassword,
   fetchMyProfile,
   onAuthChange,
 } from '../lib/api/auth';
@@ -27,13 +26,6 @@ export interface AuthUser {
   supervisorName?: string;
 }
 
-export interface SignUpParams {
-  email: string;
-  password: string;
-  fullName: string;
-  supervisorName?: string;
-}
-
 interface AuthState {
   user: AuthUser | null;
   isAuthed: boolean;
@@ -41,7 +33,8 @@ interface AuthState {
   /** true when the real Supabase backend is in use */
   backend: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (p: SignUpParams) => Promise<{ needsConfirmation: boolean }>;
+  /** why the last session was ended (e.g. account disabled), shown on login */
+  authNotice: string | null;
   logout: () => Promise<void>;
   /** cosmetic login — only meaningful in local (no-backend) mode */
   demoLogin: (p: { email: string; role: Role; supervisorName?: string }) => void;
@@ -63,12 +56,22 @@ function roleLabel(role: Role) {
 function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authNotice, setAuthNotice] = useState<string | null>(null);
 
   const syncFromSession = useCallback(async () => {
     const profile = await fetchMyProfile();
     if (!profile) {
       setUser(null);
+    } else if (!profile.active) {
+      // Disabled (or not yet activated) accounts are signed straight back out.
+      // The database denies them all data anyway; this just explains why.
+      await apiSignOut();
+      setUser(null);
+      setAuthNotice(
+        'Your account is not active. Ask your director to enable it on the Users page.'
+      );
     } else {
+      setAuthNotice(null);
       setUser({
         id: profile.id,
         email: profile.email,
@@ -97,15 +100,7 @@ function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         await signInWithPassword(email, password);
         await syncFromSession();
       },
-      signUp: async ({ email, password, fullName, supervisorName }) => {
-        const { session } = await signUpWithPassword(email, password, {
-          full_name: fullName,
-          role: 'supervisor',
-          supervisor_name: supervisorName,
-        });
-        if (session) await syncFromSession();
-        return { needsConfirmation: !session };
-      },
+      authNotice,
       logout: async () => {
         await apiSignOut();
         setUser(null);
@@ -114,7 +109,7 @@ function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         /* not used when the backend is active */
       },
     }),
-    [user, loading, syncFromSession]
+    [user, loading, authNotice, syncFromSession]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -145,9 +140,7 @@ function LocalAuthProvider({ children }: { children: ReactNode }) {
       signIn: async () => {
         throw new Error('Sign in requires the Supabase backend to be configured.');
       },
-      signUp: async () => {
-        throw new Error('Sign up requires the Supabase backend to be configured.');
-      },
+      authNotice: null,
       logout: async () => {
         sessionStorage.removeItem(LOCAL_KEY);
         setUser(null);

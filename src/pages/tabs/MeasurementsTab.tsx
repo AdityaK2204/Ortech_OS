@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMeasurements } from '../../store/MeasurementsContext';
+import PhotoThumbs from '../../components/PhotoThumbs';
+import { isStoredPhoto } from '../../lib/api/photos';
 import { exportCsv, exportExcel, exportPdf } from '../../lib/jmsExport';
 import {
   measurementTypeLabel,
@@ -232,6 +234,11 @@ export default function MeasurementsTab({ project }: { project: Project }) {
                       )}
                       <span className="text-slate-400">by {m.supervisorName}</span>
                     </div>
+                    {m.photoNames.some(isStoredPhoto) && (
+                      <div className="mt-2">
+                        <PhotoThumbs refs={m.photoNames} size={48} />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

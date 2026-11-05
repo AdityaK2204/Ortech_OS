@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import PhotoThumbs from './PhotoThumbs';
 import { useAccounts } from '../store/AccountsContext';
 import {
   TXN_STATUS_META,
@@ -123,7 +124,7 @@ export function TxnDetail({
         </div>
       </dl>
 
-      {/* Bill photos (names in V1 — storage upload arrives with the photo phase) */}
+      {/* Bill photos — signed URLs from the private site-photos bucket */}
       <div>
         <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
           Bill / invoice photos
@@ -131,16 +132,7 @@ export function TxnDetail({
         {txn.billPhotoNames.length === 0 ? (
           <p className="text-xs text-rose-500">No photo attached.</p>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            {txn.billPhotoNames.map((n, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-600"
-              >
-                📷 {n}
-              </span>
-            ))}
-          </div>
+          <PhotoThumbs refs={txn.billPhotoNames} />
         )}
       </div>
 
