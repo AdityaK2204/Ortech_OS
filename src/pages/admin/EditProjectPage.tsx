@@ -64,6 +64,7 @@ export default function EditProjectPage() {
 
     const route: RouteGeometry = {
       ...project.route,
+      source: v.routeCoords.length >= 2 ? v.routeSource : project.route.source,
       geometry: {
         type: 'LineString',
         coordinates: v.routeCoords.length >= 2 ? v.routeCoords : project.route.geometry.coordinates,

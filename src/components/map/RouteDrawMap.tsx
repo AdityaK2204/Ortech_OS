@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { GoogleMap, Marker, Polyline } from '@react-google-maps/api';
 import { useGoogleMaps, hasMapsKey } from './mapsApi';
 import MapSetupCard from './MapSetupCard';
@@ -10,26 +10,44 @@ export default function RouteDrawMap({
   value,
   onChange,
   heightClass = 'h-[360px]',
+  fitKey = 0,
 }: {
   value: Coords;
   onChange: (coords: Coords) => void;
   heightClass?: string;
+  /** Bump to zoom the map to the whole route (e.g. after a file import). */
+  fitKey?: number;
 }) {
   if (!hasMapsKey) return <MapSetupCard heightClass={heightClass} />;
-  return <DrawCanvas value={value} onChange={onChange} heightClass={heightClass} />;
+  return <DrawCanvas value={value} onChange={onChange} heightClass={heightClass} fitKey={fitKey} />;
+}
+
+function fitToRoute(map: google.maps.Map, coords: Coords) {
+  if (coords.length < 2) return;
+  const b = new google.maps.LatLngBounds();
+  for (const [lng, lat] of coords) b.extend({ lat, lng });
+  map.fitBounds(b, 40);
 }
 
 function DrawCanvas({
   value,
   onChange,
   heightClass,
+  fitKey,
 }: {
   value: Coords;
   onChange: (coords: Coords) => void;
   heightClass: string;
+  fitKey: number;
 }) {
   const { isLoaded, loadError } = useGoogleMaps();
   const mapRef = useRef<google.maps.Map | null>(null);
+  const valueRef = useRef(value);
+  valueRef.current = value;
+
+  useEffect(() => {
+    if (fitKey && mapRef.current) fitToRoute(mapRef.current, valueRef.current);
+  }, [fitKey]);
 
   const path = value.map(([lng, lat]) => ({ lat, lng }));
 
@@ -62,6 +80,7 @@ function DrawCanvas({
         zoom={path.length ? 15 : 5}
         onLoad={(m) => {
           mapRef.current = m;
+          fitToRoute(m, value);
         }}
         onClick={addPoint}
         options={{
@@ -77,7 +96,9 @@ function DrawCanvas({
             options={{ strokeColor: '#0d9488', strokeWeight: 5, strokeOpacity: 1 }}
           />
         )}
-        {path.map((p, i) => (
+        {(path.length <= 60 ? path : [path[0], path[path.length - 1]]).map((p, j, shown) => {
+          const i = shown.length === path.length ? j : j === 0 ? 0 : path.length - 1;
+          return (
           <Marker
             key={i}
             position={p}
@@ -91,7 +112,8 @@ function DrawCanvas({
               strokeWeight: 2,
             }}
           />
-        ))}
+          );
+        })}
       </GoogleMap>
 
       {/* controls */}

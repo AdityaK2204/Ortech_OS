@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import RouteDrawMap from '../../components/map/RouteDrawMap';
+import RouteImport, { type ImportedRoute } from '../../components/map/RouteImport';
 import { formatCurrency, formatMeters } from '../../lib/progress';
-import type { MachineAssignment, Project, TeamRole } from '../../types';
+import type { MachineAssignment, Project, RouteGeometry, TeamRole } from '../../types';
 
 // ---------------------------------------------------------------------------
 // One form, two uses (create + edit). It owns all field state and hands the
@@ -43,6 +44,8 @@ export interface ProjectFormValues {
   startDate: string;
   endDate: string;
   routeCoords: [number, number][];
+  /** where routeCoords came from (hand-drawn or a Google Earth file) */
+  routeSource: RouteGeometry['source'];
   chamber: string;
   splice: string;
   marker: string;
@@ -78,6 +81,7 @@ export function emptyValues(): ProjectFormValues {
     startDate: todayISO(),
     endDate: '',
     routeCoords: [],
+    routeSource: 'hand_drawn',
     chamber: '',
     splice: '',
     marker: '',
@@ -115,6 +119,7 @@ export function valuesFromProject(p: Project): ProjectFormValues {
     startDate: p.startDate,
     endDate: p.endDate,
     routeCoords: p.route.geometry.coordinates.map(([lng, lat]) => [lng, lat]),
+    routeSource: p.route.source,
     chamber: pointTarget('t5'),
     splice: pointTarget('t6'),
     marker: pointTarget('t7'),
@@ -179,12 +184,28 @@ export default function ProjectForm({
 }) {
   const [v, setV] = useState<ProjectFormValues>(initial);
   const [error, setError] = useState<string | null>(null);
+  const [imported, setImported] = useState<ImportedRoute | null>(null);
+  const [fitKey, setFitKey] = useState(0);
   const up = (patch: Partial<ProjectFormValues>) => setV((s) => ({ ...s, ...patch }));
 
   const patchMember = (key: string, p: Partial<MemberDraft>) =>
     up({ members: v.members.map((m) => (m.key === key ? { ...m, ...p } : m)) });
   const patchMachine = (key: string, p: Partial<MachineDraft>) =>
     up({ machines: v.machines.map((m) => (m.key === key ? { ...m, ...p } : m)) });
+
+  const onImport = (r: ImportedRoute) => {
+    setImported(r);
+    setFitKey((k) => k + 1);
+    up({
+      routeCoords: r.coords,
+      routeSource: r.source,
+      // Fill the chainage from the file only when it hasn't been entered yet.
+      ...(n(v.lengthM) > 0 ? {} : { lengthM: String(Math.round(r.lengthM)) }),
+    });
+  };
+  const measuredM = imported ? Math.round(imported.lengthM) : 0;
+  const lengthDiffers =
+    imported !== null && n(v.lengthM) > 0 && Math.abs(n(v.lengthM) - measuredM) > Math.max(5, measuredM * 0.02);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -245,8 +266,34 @@ export default function ProjectForm({
       </Section>
 
       {/* 2. Route */}
-      <Section title="Route on map" step={2} hint="Click along the road to trace the site. Chainage is measured proportionally along this line.">
-        <RouteDrawMap value={v.routeCoords} onChange={(routeCoords) => up({ routeCoords })} />
+      <Section title="Route on map" step={2} hint="Import the route from Google Earth, or click along the road to trace it. Chainage is measured proportionally along this line.">
+        <RouteImport onImport={onImport} />
+        {imported && (
+          <div className="mb-3 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800 ring-1 ring-emerald-200">
+            Imported <b>{imported.label}</b> — {imported.coords.length} points, measured length{' '}
+            <b>{formatMeters(measuredM)}</b>.
+            {lengthDiffers && (
+              <>
+                {' '}Your chainage is {formatMeters(n(v.lengthM))}.{' '}
+                <button
+                  type="button"
+                  className="font-semibold text-emerald-900 underline"
+                  onClick={() => up({ lengthM: String(measuredM) })}
+                >
+                  Use {formatMeters(measuredM)}
+                </button>
+              </>
+            )}
+          </div>
+        )}
+        <RouteDrawMap
+          value={v.routeCoords}
+          fitKey={fitKey}
+          onChange={(routeCoords) => {
+            if (routeCoords.length === 0) setImported(null);
+            up({ routeCoords, ...(routeCoords.length === 0 ? { routeSource: 'hand_drawn' as const } : {}) });
+          }}
+        />
         {v.routeCoords.length < 2 && (
           <p className="mt-2 text-xs text-amber-600">
             Optional but recommended — if left blank, a placeholder line is used.
