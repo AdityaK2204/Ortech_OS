@@ -13,6 +13,7 @@ import {
   TxnStatusPill,
 } from '../../components/TxnBits';
 import { relativeTime } from '../../lib/progress';
+import { uploadPhotos } from '../../lib/api/photos';
 import type { Project, Txn, TxnCategory, TxnInput } from '../../types';
 
 // ---------------------------------------------------------------------------
@@ -168,7 +169,7 @@ function ExpenseForm({
   const [gstin, setGstin] = useState('');
   const [vendor, setVendor] = useState('');
   const [description, setDescription] = useState('');
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<File[]>([]);
   const [paidVia, setPaidVia] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -189,6 +190,12 @@ function ExpenseForm({
 
     setBusy(true);
     try {
+      const billPhotoNames = await uploadPhotos(
+        project.id,
+        'bills',
+        photos,
+        new Date().toISOString().slice(0, 10)
+      );
       await onSubmit({
         projectId: project.id,
         supervisorName: user?.supervisorName ?? user?.name ?? 'Supervisor',
@@ -200,7 +207,7 @@ function ExpenseForm({
         vendorName: vendor.trim(),
         vendorGstin: hasGst && gstin.trim() ? gstin.trim().toUpperCase() : undefined,
         description: description.trim(),
-        billPhotoNames: photos,
+        billPhotoNames,
         paymentMethodUsed: (paidVia || undefined) as TxnInput['paymentMethodUsed'],
       });
     } catch (e) {
@@ -318,7 +325,7 @@ function ExpenseForm({
             capture="environment"
             multiple
             onChange={(e) =>
-              setPhotos(e.target.files ? Array.from(e.target.files).map((f) => f.name) : [])
+              setPhotos(e.target.files ? Array.from(e.target.files) : [])
             }
             className="block w-full text-sm text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2.5 file:text-sm file:font-bold file:text-brand-700 hover:file:bg-brand-100"
           />

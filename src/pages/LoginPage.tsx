@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth, homePathFor, type Role } from '../auth/AuthContext';
 import { useProjects } from '../store/ProjectsContext';
 
-type Mode = 'signin' | 'signup';
-
 export default function LoginPage() {
   const { backend } = useAuth();
   return (
@@ -33,47 +31,23 @@ export default function LoginPage() {
 // --- Real credential auth (Supabase backend) --------------------------------
 
 function CredentialAuth() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, authNotice } = useAuth();
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState<Mode>('signin');
-  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setNotice(null);
     if (!email.trim() || !password) return setError('Enter your email and password.');
-    if (mode === 'signup' && !fullName.trim()) return setError('Enter your full name.');
-    if (mode === 'signup' && password.length < 6)
-      return setError('Password must be at least 6 characters.');
 
     setBusy(true);
     try {
-      if (mode === 'signin') {
-        await signIn(email.trim(), password);
-        navigate('/');
-      } else {
-        const { needsConfirmation } = await signUp({
-          email: email.trim(),
-          password,
-          fullName: fullName.trim(),
-          // new self-service accounts are supervisors by default; the name they
-          // sign up with becomes their supervisor identity.
-          supervisorName: fullName.trim(),
-        });
-        if (needsConfirmation) {
-          setMode('signin');
-          setNotice('Account created. Check your email to confirm, then sign in.');
-        } else {
-          navigate('/');
-        }
-      }
+      await signIn(email.trim(), password);
+      navigate('/');
     } catch (err) {
       setError(friendly((err as Error).message));
     } finally {
@@ -81,47 +55,20 @@ function CredentialAuth() {
     }
   };
 
+  const shown = error ?? authNotice;
+
   return (
     <form onSubmit={submit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      {/* mode toggle */}
-      <div className="mb-5 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
-        {(['signin', 'signup'] as Mode[]).map((m) => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => {
-              setMode(m);
-              setError(null);
-              setNotice(null);
-            }}
-            className={`rounded-lg py-2 text-sm font-semibold transition ${
-              mode === m ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            {m === 'signin' ? 'Sign in' : 'Create account'}
-          </button>
-        ))}
-      </div>
-
-      {mode === 'signup' && (
-        <Field label="Full name">
-          <input className="ip" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Manoj Reddy" autoComplete="name" />
-        </Field>
-      )}
-
       <Field label="Work email">
         <input className="ip" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@ortech.os" autoComplete="email" />
       </Field>
 
       <Field label="Password">
-        <input className="ip" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} />
+        <input className="ip" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password" />
       </Field>
 
-      {error && (
-        <p className="mb-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{error}</p>
-      )}
-      {notice && (
-        <p className="mb-3 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">{notice}</p>
+      {shown && (
+        <p className="mb-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{shown}</p>
       )}
 
       <button
@@ -129,20 +76,11 @@ function CredentialAuth() {
         disabled={busy}
         className="w-full rounded-lg bg-brand-700 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800 active:scale-[0.99] disabled:opacity-60"
       >
-        {busy ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
+        {busy ? 'Please wait…' : 'Sign in'}
       </button>
 
       <p className="mt-4 text-center text-[11px] text-slate-400">
-        {mode === 'signin' ? (
-          <>
-            New here?{' '}
-            <button type="button" onClick={() => setMode('signup')} className="font-semibold text-brand-700 hover:underline">
-              Create an account
-            </button>
-          </>
-        ) : (
-          <>New accounts are created as Site Supervisors. Admin access is granted by your director.</>
-        )}
+        Accounts are created by your director. Ask them for an invite if you don&apos;t have one.
       </p>
     </form>
   );

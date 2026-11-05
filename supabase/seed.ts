@@ -46,6 +46,18 @@ async function createUser(
   if (error && !/already been registered|already exists/i.test(error.message)) {
     throw error;
   }
+  // The sign-up trigger ignores client metadata and creates an inactive
+  // supervisor; set the real role / site identity with the service role.
+  const { error: profileErr } = await admin
+    .from('profiles')
+    .update({
+      full_name: meta.full_name,
+      role: meta.role,
+      supervisor_name: meta.supervisor_name ?? null,
+      active: true,
+    })
+    .eq('email', email);
+  if (profileErr) throw profileErr;
   console.log(`  user: ${email} (${meta.role})`);
 }
 

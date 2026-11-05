@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint
+      - run: npm test
+      # SQL migrations + RLS/security probes in PGlite (Postgres in WASM)
+      - run: npm run test:db
+      # build runs `tsc -b` (type-check) then `vite build`
+      - run: npm run build

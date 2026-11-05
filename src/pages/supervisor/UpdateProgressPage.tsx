@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import { useAuth } from '../../auth/AuthContext';
 import { useProjects } from '../../store/ProjectsContext';
+import { uploadPhotos } from '../../lib/api/photos';
 import {
   ISSUE_FLAGS,
   completedMeters,
@@ -63,7 +64,8 @@ export default function UpdateProgressPage() {
   const [dieselL, setDieselL] = useState('');
   const [issueFlag, setIssueFlag] = useState<IssueFlag>('none');
   const [note, setNote] = useState('');
-  const [photoNames, setPhotoNames] = useState<string[]>([]);
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const taskById = useMemo(() => {
@@ -125,7 +127,7 @@ export default function UpdateProgressPage() {
 
   const onPhotos = (files: FileList | null) => {
     if (!files) return;
-    setPhotoNames(Array.from(files).map((f) => f.name));
+    setPhotoFiles(Array.from(files));
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -180,7 +182,9 @@ export default function UpdateProgressPage() {
 
     if (built.length === 0) return setError('Add at least one work entry.');
 
+    setBusy(true);
     try {
+      const photoNames = await uploadPhotos(project.id, 'pulses', photoFiles, date);
       await addPulse({
         projectId: project.id,
         date,
@@ -192,6 +196,7 @@ export default function UpdateProgressPage() {
         photoNames,
       });
     } catch (err) {
+      setBusy(false);
       return setError((err as Error).message || 'Failed to submit update.');
     }
 
@@ -436,9 +441,9 @@ export default function UpdateProgressPage() {
               onChange={(e) => onPhotos(e.target.files)}
               className="block w-full text-sm text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-brand-700 hover:file:bg-brand-100"
             />
-            {photoNames.length > 0 && (
+            {photoFiles.length > 0 && (
               <p className="mt-1.5 text-xs text-slate-500">
-                {photoNames.length} photo(s) attached
+                {photoFiles.length} photo(s) attached
               </p>
             )}
           </div>
@@ -461,9 +466,10 @@ export default function UpdateProgressPage() {
             </Link>
             <button
               type="submit"
-              className="flex-1 rounded-lg bg-brand-700 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-800 active:scale-[0.99] sm:flex-none sm:px-8"
+              disabled={busy}
+              className="flex-1 rounded-lg bg-brand-700 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-800 active:scale-[0.99] disabled:opacity-60 sm:flex-none sm:px-8"
             >
-              Submit daily update
+              {busy ? 'Uploading…' : 'Submit daily update'}
             </button>
           </div>
         </div>

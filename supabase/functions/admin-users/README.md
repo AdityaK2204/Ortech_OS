@@ -30,10 +30,12 @@ That's it. Reload the app and **Invite user** will create accounts directly.
 
 The app detects the function isn't there and shows a friendly note: add users via
 **Supabase dashboard → Authentication → Users → Add user**, then set their role
-and site assignment on the Users page. Same result, one extra hop.
+and site assignment on the Users page, then click **Enable** (dashboard-created accounts start disabled).
 
 ## Security
 
-- The caller's JWT is verified; their `profiles.role` must be `admin`.
+- The caller's JWT is verified and they must be an **active** admin (`is_admin()`).
+- Email and role are validated; only `admin`, `supervisor`, `accountant` are accepted.
+- The new profile is set (role, site, `active = true`) with the service role — client metadata is never trusted.
 - Passwords: if you don't provide one, a random temporary password is generated
   and returned once to the admin to share with the user.

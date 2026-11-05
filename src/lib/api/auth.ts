@@ -36,27 +36,6 @@ export async function signInWithPassword(email: string, password: string): Promi
   if (error) throw error;
 }
 
-/**
- * Register a new user. `meta` is stored on the auth user and read by the
- * DB trigger to create the matching profile (role defaults to supervisor).
- * Returns whether a session was granted immediately (email-confirmation off)
- * or the user must confirm via email first.
- */
-export async function signUpWithPassword(
-  email: string,
-  password: string,
-  meta: { full_name: string; role: 'admin' | 'supervisor'; supervisor_name?: string }
-): Promise<{ session: unknown | null }> {
-  const sb = requireSupabase();
-  const { data, error } = await sb.auth.signUp({
-    email,
-    password,
-    options: { data: meta },
-  });
-  if (error) throw error;
-  return { session: data.session };
-}
-
 export async function signOut(): Promise<void> {
   const sb = requireSupabase();
   await sb.auth.signOut();
